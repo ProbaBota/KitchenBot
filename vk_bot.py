@@ -15,22 +15,30 @@ from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 
 # ========== НАСТРОЙКИ ==========
 # Загрузка переменных окружения
-VK_TOKEN = os.getenv('VK_TOKEN')
-GROUP_ID = os.getenv('GROUP_ID')
-ADMIN_ID = int(os.getenv('ADMIN_ID'))
+VK_TOKEN = os.getenv('VK_TOKEN', '')  # Добавьте значение по умолчанию
+GROUP_ID = os.getenv('GROUP_ID', '')  # Добавьте значение по умолчанию
+ADMIN_ID = int(os.getenv('ADMIN_ID', ''))  # Добавьте значение по умолчанию
 
 COMPANY_INFO = {
     'experience': '4 года',
-    'completed_projects': '3000',
+    'completed_projects': '1000',
     'production_time': '21 день',
     'warranty': '2',
-    'kitchen_price_from': '75 000',
-    'wardrobe_price_from': '45 000',
-    'website': 'start-kitchen.ru',
-    'phone': '+7 (495) 988-28-85',
-    'email': 'info@start-kitchen.ru',
-    'address': 'г. Москва, БЦ Omega Plaza, ул. Ленинская Слобода, 19',
-    'work_hours': 'Ежедневно: 9:00-21:00'
+    'kitchen_price_from': '100 000',
+    'wardrobe_price_from': '70 000',
+    'website': 'sohokitchen.ru',
+    'telegram': 't.me/soho_kitchen',
+    'phone': ('\n'
+             '+7 (499) 110-71-89\n'
+             '+7 (977) 984-66-96\n'
+             '+7 (925) 459-64-39'
+    ),
+    'email': 'Soho.kitchen@yandex.ru',
+    'address': 'г. Москва, ул. Нарвская, д. 23',
+    'work_hours': ('\n'
+        '• пн-пт 10:00-19:00 (офис)\n'
+        '• пн-пт 9:00-20:00 (дизайнер)'
+    )
 }
 
 # ========== HTTP СЕРВЕР ДЛЯ HEALTH CHECKS ==========
@@ -81,10 +89,10 @@ def get_main_keyboard():
     keyboard.add_button("📞 Заказать звонок", color=VkKeyboardColor.PRIMARY)
     keyboard.add_line()
     keyboard.add_button("💰 Рассчитать стоимость", color=VkKeyboardColor.POSITIVE)
-    keyboard.add_button("📸 Примеры работ", color=VkKeyboardColor.SECONDARY)
-    keyboard.add_line()
     keyboard.add_button("📍 Контакты", color=VkKeyboardColor.SECONDARY)
+    keyboard.add_line()
     keyboard.add_button("👷 Вызвать замерщика", color=VkKeyboardColor.POSITIVE)
+    keyboard.add_button("📸 Примеры работ", color=VkKeyboardColor.SECONDARY)
     return keyboard.get_keyboard()
 
 def get_back_keyboard():
@@ -210,7 +218,7 @@ def get_welcome_message(user_name):
 
 ✅ Более {COMPANY_INFO['completed_projects']} кухонь и шкафов мы уже изготовили в Москве и области
 
-✅ Есть рассрочка от 6 до 24-х месяцев
+✅ Есть рассрочка без % от 6 до 24-х месяцев
 
 🎁 Рассчитайте стоимость вашей мебели за 1 минуту и при заказе получите встроенную технику в подарок на выбор: вытяжка, мойка или плита!
 
@@ -277,7 +285,7 @@ def format_phone_number(text: str) -> str:
 
 def send_reminder_to_admin(vk, message_text):
     """Отправка напоминания админу"""
-    time.sleep(60)  # 60 секунд задержка
+    time.sleep(300)  # 60 секунд задержка
     try:
         vk.messages.send(
             user_id=ADMIN_ID,
@@ -309,6 +317,8 @@ def send_simple_request(vk, user_id, user_name, phone_number, request_type, is_m
 
 📞 Наш менеджер свяжется с вами как можно скорее
 👤 Ваш номер: {formatted_phone}
+
+🎁 Не забудьте спросить про подарок!
 
 До связи!"""
     
@@ -692,8 +702,12 @@ def handle_message(vk, user_id, text):
             vk, 
             user_id, 
             f"📸 Примеры наших работ\n\n"
-            f"{user_name}, посмотрите наши {COMPANY_INFO['completed_projects']} выполненных проектов!\n\n"
-            f"Свяжитесь с нами для просмотра полного портфолио: {COMPANY_INFO['phone']}",
+            f"{user_name}, посмотреть наши {COMPANY_INFO['completed_projects']} выполненных проектов подробнее вы можете на нашем сайте: sohokitchen.ru\n\n"
+            f"Или в нашем фотоальбоме группы Сохо!\n\n"
+            f"Контакты для связи:\n"
+            f"+7 (499) 110-71-89\n"
+            f"+7 (977) 984-66-96\n"
+            f"+7 (925) 459-64-39",
             get_back_keyboard()
         )
     
@@ -705,6 +719,7 @@ def handle_message(vk, user_id, text):
             f"📞 Телефон: {COMPANY_INFO['phone']}\n"
             f"📧 Email: {COMPANY_INFO['email']}\n"
             f"🌐 Сайт: {COMPANY_INFO['website']}\n"
+            f"📱 Наша группа Telegram: {COMPANY_INFO['telegram']}\n"
             f"🏭 Адрес: {COMPANY_INFO['address']}\n"
             f"⏰ Часы работы: {COMPANY_INFO['work_hours']}",
             get_back_keyboard()
@@ -718,9 +733,9 @@ def handle_message(vk, user_id, text):
             f"👷 Вызов замерщика\n\n"
             f"{user_name}, наш специалист свяжется с вами и назначит дату замера!\n\n"
             f"Что включает замер:\n"
-            f"✅ Обмер помещения\n"
-            f"✅ Консультация на месте\n"
-            f"✅ Расчет стоимости\n\n"
+            f"• Бесплатный 3д проект\n"
+            f"• Советы по дизайну кухни и спецификация\n"
+            f"• При заключении в первую встречу подарок\n\n"
             f"Отправьте номер для связи:\n"
             f"Просто напишите номер в чат",
             get_phone_keyboard()
