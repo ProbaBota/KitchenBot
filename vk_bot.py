@@ -19,18 +19,18 @@ VK_TOKEN = os.getenv('VK_TOKEN')
 GROUP_ID = os.getenv('GROUP_ID')
 ADMIN_ID = int(os.getenv('ADMIN_ID'))
 
-# COMPANY_INFO
 COMPANY_INFO = {
-    'experience': '15 лет',
-    'completed_projects': '5000',
+    'experience': '4 года',
+    'completed_projects': '3000',
     'production_time': '21 день',
-    'warranty': '3',
+    'warranty': '2',
     'kitchen_price_from': '75 000',
     'wardrobe_price_from': '45 000',
-    'phone': '+7 (999) 123-45-67',
-    'email': 'info@soho-kitchen.ru',
-    'address': 'Москва, ул. Примерная, д. 1',
-    'work_hours': 'Пн-Пт 9:00-20:00, Сб-Вс 10:00-18:00'
+    'website': 'start-kitchen.ru',
+    'phone': '+7 (495) 988-28-85',
+    'email': 'info@start-kitchen.ru',
+    'address': 'г. Москва, БЦ Omega Plaza, ул. Ленинская Слобода, 19',
+    'work_hours': 'Ежедневно: 9:00-21:00'
 }
 
 # ========== HTTP СЕРВЕР ДЛЯ HEALTH CHECKS ==========
