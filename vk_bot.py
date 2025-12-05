@@ -1,13 +1,24 @@
 import os
 import sys
 import logging
-import json
 import random
 from datetime import datetime
 from threading import Thread
 import time
 import threading
-from http.server import HTTPServer, BaseHTTPRequestHandler
+
+# Устанавливаем кодировку
+sys.stdout.reconfigure(encoding='utf-8')
+
+# Пытаемся загрузить dotenv
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+    print("✅ .env файл загружен")
+except ImportError:
+    print("⚠️  python-dotenv не установлен")
+except Exception as e:
+    print(f"⚠️  Ошибка загрузки .env: {e}")
 
 import vk_api
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
@@ -40,6 +51,18 @@ COMPANY_INFO = {
         '• пн-пт 9:00-20:00 (дизайнер)'
     )
 }
+
+# ========== НАСТРОЙКИ ФОТОГРАФИЙ ==========
+# ВАЖНО: Замените эти ID на реальные ID фотографий из вашего сообщества VK
+# Формат: photo-{owner_id}_{photo_id}
+WELCOME_PHOTOS = [
+    'photo-234418631_456239017',  # Замените на реальные ID
+    'photo-234418631_456239021',
+    'photo-234418631_456239020',
+    'photo-234418631_456239019',
+    'photo-234418631_456239018',
+    'photo-234418631_456239017',
+]
 
 # ========== НАСТРОЙКА ЛОГГИРОВАНИЯ ==========
 logging.basicConfig(
@@ -207,7 +230,6 @@ def get_user_name(vk, user_id):
 def send_message(vk, user_id, message, keyboard=None):
     """Отправка сообщения пользователю"""
     try:
-        # Создаем 64-битное случайное число
         import random
         import time
         
@@ -225,6 +247,40 @@ def send_message(vk, user_id, message, keyboard=None):
         return True
     except Exception as e:
         logger.error(f"Ошибка отправки сообщения: {e}")
+        return False
+
+def send_message_with_photos(vk, user_id, message, photos=None, keyboard=None):
+    """Отправка сообщения с фотографиями"""
+    try:
+        import random
+        import time
+        
+        timestamp = int(time.time() * 1000)
+        random_part = random.randint(0, 999999)
+        random_id = (timestamp << 20) | random_part
+        
+        if photos and isinstance(photos, list) and len(photos) > 0:
+            # Формируем attachment строку с фотографиями
+            # VK позволяет до 10 фотографий в одном сообщении
+            attachments = ','.join(photos[:10])
+            
+            vk.messages.send(
+                user_id=user_id,
+                message=message,
+                keyboard=keyboard,
+                attachment=attachments,
+                random_id=random_id
+            )
+        else:
+            vk.messages.send(
+                user_id=user_id,
+                message=message,
+                keyboard=keyboard,
+                random_id=random_id
+            )
+        return True
+    except Exception as e:
+        logger.error(f"Ошибка отправки сообщения с фото: {e}")
         return False
 
 def is_valid_phone_number(text: str) -> bool:
@@ -745,7 +801,8 @@ def handle_message(vk, user_id, text):
         # Если это первое сообщение или непонятный текст
         if user_id not in user_data or data.get('form_type') is None:
             welcome_text = get_welcome_message(user_name)
-            send_message(vk, user_id, welcome_text, get_main_keyboard())
+            # Отправляем сообщение с фотографиями
+            send_message_with_photos(vk, user_id, welcome_text, WELCOME_PHOTOS, get_main_keyboard())
 
 def cancel_form(user_id):
     """Отмена заполнения формы"""
@@ -785,6 +842,7 @@ def main():
             
             print("✅ Успешное подключение к VK!")
             print(f"👤 Администратор: {ADMIN_ID}")
+            print("📸 Фотографии для приветствия:", WELCOME_PHOTOS)
             print("🤖 Бот слушает сообщения...")
             
             # Основной цикл
