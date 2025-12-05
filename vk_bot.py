@@ -7,10 +7,8 @@ from threading import Thread
 import time
 import threading
 
-# Устанавливаем кодировку
 sys.stdout.reconfigure(encoding='utf-8')
 
-# Пытаемся загрузить dotenv
 try:
     from dotenv import load_dotenv
     load_dotenv()
@@ -53,7 +51,6 @@ COMPANY_INFO = {
 }
 
 # ========== НАСТРОЙКИ ФОТОГРАФИЙ ==========
-# ВАЖНО: Замените эти ID на реальные ID фотографий из вашего сообщества VK
 # Формат: photo-{owner_id}_{photo_id}
 WELCOME_PHOTOS = [
     'photo-234418631_456239017',  # Замените на реальные ID
@@ -71,14 +68,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Глобальный словарь для хранения данных пользователей
 user_data = {}
 
 # ========== НАСТРОЙКИ НАПОМИНАНИЙ ==========
 REMINDER_ENABLED = False  # Включить/выключить напоминания
-REMINDER_CHECK_INTERVAL = 3600  # Проверка каждые 60 минут (в секундах)
-REMINDER_INTERVAL_1 = 6 * 3600  # Первое напоминание через 6 часов (в секундах)
-REMINDER_INTERVAL_2 = 24 * 3600  # Второе напоминание через 24 часа (в секундах)
+REMINDER_CHECK_INTERVAL = 3600
+REMINDER_INTERVAL_1 = 6 * 3600
+REMINDER_INTERVAL_2 = 24 * 3600
 
 # Тексты напоминаний
 REMINDER_1_TEXT = """⏰ Напоминание от кухонной фабрики Soho!
@@ -111,7 +107,6 @@ P.S. Это последнее напоминание. Больше не буд�
 
 С уважением, команда Soho Kitchen!"""
 
-# Указатель на каком напоминании какой текст использовать
 REMINDER_TEXTS = {
     1: REMINDER_1_TEXT,
     2: REMINDER_2_TEXT
@@ -119,7 +114,6 @@ REMINDER_TEXTS = {
 # ========== КЛАВИАТУРЫ VK ==========
 
 def get_main_keyboard():
-    """Основная клавиатура"""
     keyboard = VkKeyboard(one_time=False)
     keyboard.add_button("📞 Заказать звонок", color=VkKeyboardColor.PRIMARY)
     keyboard.add_line()
@@ -131,19 +125,16 @@ def get_main_keyboard():
     return keyboard.get_keyboard()
 
 def get_back_keyboard():
-    """Клавиатура только с кнопкой Назад"""
     keyboard = VkKeyboard(one_time=False)
     keyboard.add_button("◀️ Назад в меню", color=VkKeyboardColor.NEGATIVE)
     return keyboard.get_keyboard()
 
 def get_phone_keyboard():
-    """Клавиатура для запроса телефона"""
     keyboard = VkKeyboard(one_time=True)
     keyboard.add_button("◀️ Назад в меню", color=VkKeyboardColor.NEGATIVE)
     return keyboard.get_keyboard()
 
 def get_calculate_keyboard():
-    """Клавиатура для выбора типа расчета"""
     keyboard = VkKeyboard(one_time=True)
     keyboard.add_button("🎨 Кухня", color=VkKeyboardColor.POSITIVE)
     keyboard.add_button("🚪 Шкаф", color=VkKeyboardColor.PRIMARY)
@@ -152,7 +143,6 @@ def get_calculate_keyboard():
     return keyboard.get_keyboard()
 
 def get_kitchen_type_keyboard():
-    """Тип кухни"""
     keyboard = VkKeyboard(one_time=True)
     keyboard.add_button("Прямая", color=VkKeyboardColor.SECONDARY)
     keyboard.add_button("Угловая", color=VkKeyboardColor.SECONDARY)
@@ -164,7 +154,6 @@ def get_kitchen_type_keyboard():
     return keyboard.get_keyboard()
 
 def get_wardrobe_type_keyboard():
-    """Тип шкафа"""
     keyboard = VkKeyboard(one_time=True)
     keyboard.add_button("Купе", color=VkKeyboardColor.PRIMARY)
     keyboard.add_line()
@@ -178,7 +167,6 @@ def get_wardrobe_type_keyboard():
     return keyboard.get_keyboard()
 
 def get_design_project_keyboard():
-    """Дизайн-проект"""
     keyboard = VkKeyboard(one_time=True)
     keyboard.add_button("Да", color=VkKeyboardColor.POSITIVE)
     keyboard.add_line()
@@ -189,7 +177,6 @@ def get_design_project_keyboard():
     return keyboard.get_keyboard()
 
 def get_timeframe_keyboard():
-    """Сроки покупки"""
     keyboard = VkKeyboard(one_time=True)
     keyboard.add_button("В ближайшее время", color=VkKeyboardColor.POSITIVE)
     keyboard.add_line()
@@ -200,7 +187,6 @@ def get_timeframe_keyboard():
     return keyboard.get_keyboard()
 
 def get_deadline_keyboard():
-    """Сроки с подарками"""
     keyboard = VkKeyboard(one_time=True)
     keyboard.add_button("В ближайшее время (Скидка 30% и подарок)", color=VkKeyboardColor.POSITIVE)
     keyboard.add_line()
@@ -212,7 +198,6 @@ def get_deadline_keyboard():
     return keyboard.get_keyboard()
 
 def get_phone_final_keyboard():
-    """Финальная клавиатура"""
     keyboard = VkKeyboard(one_time=True)
     keyboard.add_button("◀️ Назад", color=VkKeyboardColor.SECONDARY)
     keyboard.add_button("◀️ Отмена", color=VkKeyboardColor.NEGATIVE)
@@ -1029,3 +1014,4 @@ if __name__ == "__main__":
         logger.error(f"❌ Fatal error: {e}")
 
         sys.exit(1)
+
