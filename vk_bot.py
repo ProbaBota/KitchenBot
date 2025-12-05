@@ -41,36 +41,6 @@ COMPANY_INFO = {
     )
 }
 
-# ========== HTTP СЕРВЕР ДЛЯ HEALTH CHECKS ==========
-class HealthHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        """Обработчик health check запросов"""
-        if self.path == '/health':
-            self.send_response(200)
-            self.send_header('Content-type', 'text/html')
-            self.end_headers()
-            self.wfile.write(b'Bot is running')
-        elif self.path == '/':
-            self.send_response(200)
-            self.send_header('Content-type', 'text/html')
-            self.end_headers()
-            self.wfile.write(b'<html><body><h1>VK Kitchen Bot</h1><p>Bot is alive!</p></body></html>')
-        else:
-            self.send_response(404)
-            self.end_headers()
-    
-    def log_message(self, format, *args):
-        """Отключаем логирование запросов"""
-        pass
-
-def start_health_server():
-    """Запуск HTTP сервера в отдельном потоке"""
-    port = int(os.getenv('PORT', 10000))
-    server = HTTPServer(('0.0.0.0', port), HealthHandler)
-    print(f"✅ Health server started on port {port}")
-    print(f"✅ Health check URL: http://0.0.0.0:{port}/health")
-    server.serve_forever()
-
 # ========== НАСТРОЙКА ЛОГГИРОВАНИЯ ==========
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -792,10 +762,9 @@ def cancel_form(user_id):
 
 def main():
     """Основная функция запуска бота"""
-    # Запуск HTTP сервера для health checks
-    health_thread = threading.Thread(target=start_health_server, daemon=True)
-    health_thread.start()
-    print("✅ Health check server started")
+    print("=" * 60)
+    print("🏭 VK Kitchen Bot запущен на Railway!")
+    print("=" * 60)
     
     # Проверка переменных окружения
     if not VK_TOKEN or not GROUP_ID:
@@ -806,35 +775,37 @@ def main():
         return
     
     # Авторизация
-    try:
-        vk_session = vk_api.VkApi(token=VK_TOKEN)
-        vk = vk_session.get_api()
-        
-        # Long Poll
-        longpoll = VkBotLongPoll(vk_session, GROUP_ID)
-        
-        print("=" * 60)
-        print("🏭 VK бот 'Кухонная фабрика Soho' запущен!")
-        print(f"👤 Администратор: {ADMIN_ID}")
-        print("=" * 60)
-        
-        # Основной цикл
-        for event in longpoll.listen():
-            try:
-                if event.type == VkBotEventType.MESSAGE_NEW:
-                    if event.from_user:
-                        user_id = event.message['from_id']
-                        text = event.message['text']
-                        
-                        print(f"📩 Сообщение от {user_id}: {text}")
-                        handle_message(vk, user_id, text)
-                        
-            except Exception as e:
-                logger.error(f"Ошибка обработки сообщения: {e}")
-                
-    except Exception as e:
-        logger.error(f"❌ Fatal error starting bot: {e}")
-        print(f"❌ Bot failed to start: {e}")
+    while True:  # Бесконечный цикл с переподключением
+        try:
+            vk_session = vk_api.VkApi(token=VK_TOKEN)
+            vk = vk_session.get_api()
+            
+            # Long Poll
+            longpoll = VkBotLongPoll(vk_session, GROUP_ID)
+            
+            print("✅ Успешное подключение к VK!")
+            print(f"👤 Администратор: {ADMIN_ID}")
+            print("🤖 Бот слушает сообщения...")
+            
+            # Основной цикл
+            for event in longpoll.listen():
+                try:
+                    if event.type == VkBotEventType.MESSAGE_NEW:
+                        if event.from_user:
+                            user_id = event.message['from_id']
+                            text = event.message['text']
+                            
+                            print(f"📩 Сообщение от {user_id}: {text[:50]}...")
+                            handle_message(vk, user_id, text)
+                            
+                except Exception as e:
+                    print(f"❌ Ошибка обработки сообщения: {e}")
+                    
+        except Exception as e:
+            print(f"❌ Ошибка подключения: {e}")
+            print("🔄 Переподключение через 10 секунд...")
+            time.sleep(10)  # Ждем перед переподключением
+
 
 if __name__ == "__main__":
     print("=" * 60)
