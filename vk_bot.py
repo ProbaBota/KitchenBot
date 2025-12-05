@@ -7,8 +7,10 @@ from threading import Thread
 import time
 import threading
 
+# Устанавливаем кодировку
 sys.stdout.reconfigure(encoding='utf-8')
 
+# Пытаемся загрузить dotenv
 try:
     from dotenv import load_dotenv
     load_dotenv()
@@ -51,6 +53,7 @@ COMPANY_INFO = {
 }
 
 # ========== НАСТРОЙКИ ФОТОГРАФИЙ ==========
+# ВАЖНО: Замените эти ID на реальные ID фотографий из вашего сообщества VK
 # Формат: photo-{owner_id}_{photo_id}
 WELCOME_PHOTOS = [
     'photo-234418631_456239017',  # Замените на реальные ID
@@ -68,13 +71,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Глобальный словарь для хранения данных пользователей
 user_data = {}
 
 # ========== НАСТРОЙКИ НАПОМИНАНИЙ ==========
 REMINDER_ENABLED = False  # Включить/выключить напоминания
-REMINDER_CHECK_INTERVAL = 3600
-REMINDER_INTERVAL_1 = 6 * 3600
-REMINDER_INTERVAL_2 = 24 * 3600
+REMINDER_CHECK_INTERVAL = 3600  # Проверка каждые 60 минут (в секундах)
+REMINDER_INTERVAL_1 = 6 * 3600  # Первое напоминание через 6 часов (в секундах)
+REMINDER_INTERVAL_2 = 24 * 3600  # Второе напоминание через 24 часа (в секундах)
 
 # Тексты напоминаний
 REMINDER_1_TEXT = """⏰ Напоминание от кухонной фабрики Soho!
@@ -107,6 +111,7 @@ P.S. Это последнее напоминание. Больше не буд�
 
 С уважением, команда Soho Kitchen!"""
 
+# Указатель на каком напоминании какой текст использовать
 REMINDER_TEXTS = {
     1: REMINDER_1_TEXT,
     2: REMINDER_2_TEXT
@@ -114,6 +119,7 @@ REMINDER_TEXTS = {
 # ========== КЛАВИАТУРЫ VK ==========
 
 def get_main_keyboard():
+    """Основная клавиатура"""
     keyboard = VkKeyboard(one_time=False)
     keyboard.add_button("📞 Заказать звонок", color=VkKeyboardColor.PRIMARY)
     keyboard.add_line()
@@ -125,16 +131,19 @@ def get_main_keyboard():
     return keyboard.get_keyboard()
 
 def get_back_keyboard():
+    """Клавиатура только с кнопкой Назад"""
     keyboard = VkKeyboard(one_time=False)
     keyboard.add_button("◀️ Назад в меню", color=VkKeyboardColor.NEGATIVE)
     return keyboard.get_keyboard()
 
 def get_phone_keyboard():
+    """Клавиатура для запроса телефона"""
     keyboard = VkKeyboard(one_time=True)
     keyboard.add_button("◀️ Назад в меню", color=VkKeyboardColor.NEGATIVE)
     return keyboard.get_keyboard()
 
 def get_calculate_keyboard():
+    """Клавиатура для выбора типа расчета"""
     keyboard = VkKeyboard(one_time=True)
     keyboard.add_button("🎨 Кухня", color=VkKeyboardColor.POSITIVE)
     keyboard.add_button("🚪 Шкаф", color=VkKeyboardColor.PRIMARY)
@@ -143,6 +152,7 @@ def get_calculate_keyboard():
     return keyboard.get_keyboard()
 
 def get_kitchen_type_keyboard():
+    """Тип кухни"""
     keyboard = VkKeyboard(one_time=True)
     keyboard.add_button("Прямая", color=VkKeyboardColor.SECONDARY)
     keyboard.add_button("Угловая", color=VkKeyboardColor.SECONDARY)
@@ -154,6 +164,7 @@ def get_kitchen_type_keyboard():
     return keyboard.get_keyboard()
 
 def get_wardrobe_type_keyboard():
+    """Тип шкафа"""
     keyboard = VkKeyboard(one_time=True)
     keyboard.add_button("Купе", color=VkKeyboardColor.PRIMARY)
     keyboard.add_line()
@@ -166,7 +177,20 @@ def get_wardrobe_type_keyboard():
     keyboard.add_button("◀️ Отмена", color=VkKeyboardColor.NEGATIVE)
     return keyboard.get_keyboard()
 
+def get_size_keyboard():
+    """Клавиатура для выбора типа ввода размеров"""
+    keyboard = VkKeyboard(one_time=True)
+    keyboard.add_button("📏 Я знаю точный размер", color=VkKeyboardColor.POSITIVE)
+    keyboard.add_line()
+    keyboard.add_button("❓ Знаю только приблизительно", color=VkKeyboardColor.SECONDARY)
+    keyboard.add_button("❔ Еще не знаю размер", color=VkKeyboardColor.SECONDARY)
+    keyboard.add_line()
+    keyboard.add_button("◀️ Назад", color=VkKeyboardColor.NEGATIVE)
+    keyboard.add_button("◀️ Отмена", color=VkKeyboardColor.NEGATIVE)
+    return keyboard.get_keyboard()
+
 def get_design_project_keyboard():
+    """Дизайн-проект"""
     keyboard = VkKeyboard(one_time=True)
     keyboard.add_button("Да", color=VkKeyboardColor.POSITIVE)
     keyboard.add_line()
@@ -177,6 +201,7 @@ def get_design_project_keyboard():
     return keyboard.get_keyboard()
 
 def get_timeframe_keyboard():
+    """Сроки покупки"""
     keyboard = VkKeyboard(one_time=True)
     keyboard.add_button("В ближайшее время", color=VkKeyboardColor.POSITIVE)
     keyboard.add_line()
@@ -187,6 +212,7 @@ def get_timeframe_keyboard():
     return keyboard.get_keyboard()
 
 def get_deadline_keyboard():
+    """Сроки с подарками"""
     keyboard = VkKeyboard(one_time=True)
     keyboard.add_button("В ближайшее время (Скидка 30% и подарок)", color=VkKeyboardColor.POSITIVE)
     keyboard.add_line()
@@ -198,6 +224,7 @@ def get_deadline_keyboard():
     return keyboard.get_keyboard()
 
 def get_phone_final_keyboard():
+    """Финальная клавиатура"""
     keyboard = VkKeyboard(one_time=True)
     keyboard.add_button("◀️ Назад", color=VkKeyboardColor.SECONDARY)
     keyboard.add_button("◀️ Отмена", color=VkKeyboardColor.NEGATIVE)
@@ -494,6 +521,7 @@ def handle_message(vk, user_id, text):
             'form_data': {},
             'current_step': 0,
             'waiting_for_custom_type': False,
+            'waiting_for_size_type': False,  # Новое поле: ожидаем тип размера
             'last_action': None,
             'last_activity': datetime.now().timestamp(),
             'reminder_sent_1': False,
@@ -511,6 +539,81 @@ def handle_message(vk, user_id, text):
     data = user_data[user_id]
     form_type = data.get('form_type')
     current_step = data.get('current_step', 0)
+    waiting_for_size_type = data.get('waiting_for_size_type', False)
+    
+    # ========== ОБРАБОТКА КОМАНД НАВИГАЦИИ ==========
+    
+    # Обработка команды "◀️ Назад в меню" для всех этапов
+    if text == "◀️ Назад в меню":
+        cancel_form(user_id)
+        send_message(vk, user_id, "Главное меню:", get_main_keyboard())
+        return
+    
+    # Обработка команды "◀️ Назад" (из форм)
+    if text == "◀️ Назад":
+        if form_type == 'КУХНЯ':
+            if current_step == 2:
+                # Возврат от размеров к типу кухни
+                data['current_step'] = 1
+                send_message(
+                    vk, 
+                    user_id, 
+                    f"🎨 Расчет стоимости кухни\n\n"
+                    f"{user_name}, ответьте на 3 вопроса для точного расчета.\n\n"
+                    f"1/3. Какая конфигурация кухни вам нужна?\n\n"
+                    f"Текущий выбор: {data['form_data'].get('type', 'не выбран')}",
+                    get_kitchen_type_keyboard()
+                )
+                return
+            elif current_step == 3:
+                # Возврат от сроков к размерам
+                data['current_step'] = 2
+                send_message(
+                    vk, 
+                    user_id, 
+                    f"2/3. Какие примерные размеры?\n\n"
+                    f"Текущий ответ: {data['form_data'].get('size', 'не указан')}",
+                    get_back_keyboard()
+                )
+                return
+                
+        elif form_type == 'ШКАФ':
+            if current_step == 2:
+                # Возврат от размеров к типу шкафа
+                data['current_step'] = 1
+                send_message(
+                    vk, 
+                    user_id, 
+                    f"🚪 Расчет стоимости шкафа\n\n"
+                    f"{user_name}, ответьте на 4 вопроса для точного расчета.\n\n"
+                    f"1/4. Какой тип шкафа вам нужен?\n\n"
+                    f"Текущий выбор: {data['form_data'].get('type', 'не выбран')}",
+                    get_wardrobe_type_keyboard()
+                )
+                return
+            elif current_step == 3:
+                # Возврат от дизайн-проекта к размерам
+                data['current_step'] = 2
+                send_message(
+                    vk, 
+                    user_id, 
+                    f"2/4. Какие размеры шкафа?\n\n"
+                    f"Текущий ответ: {data['form_data'].get('size', 'не указан')}",
+                    get_back_keyboard()
+                )
+                return
+            elif current_step == 4:
+                # Возврат от сроков к дизайн-проекту
+                data['current_step'] = 3
+                send_message(
+                    vk, 
+                    user_id, 
+                    f"3/4. Есть ли у вас дизайн-проект?\n\n"
+                    f"Текущий ответ: {data['form_data'].get('design_project', 'не выбран')}",
+                    get_design_project_keyboard()
+                )
+                return
+        return
     
     # ========== ОБРАБОТКА ОПРОСНИКА ==========
     
@@ -530,25 +633,93 @@ def handle_message(vk, user_id, text):
                 vk, 
                 user_id, 
                 f"✅ Конфигурация: {text}\n\n"
-                f"2/3. Какие примерные размеры?\n"
-                f"Например: 3х2.5м или укажите длину и ширину",
-                get_back_keyboard()
+                f"2/3. Какие размеры кухни?\n\n"
+                f"Вы можете:\n"
+                f"• 📏 Указать точные размеры (например: 3х2.5м)\n"
+                f"• ❓ Указать приблизительные размеры\n"
+                f"• ❔ Сказать что еще не знаете размер\n"
+                f"• ◀️ Вернуться назад\n\n"
+                f"Просто напишите размеры в чат или выберите вариант:",
+                get_size_keyboard()
             )
+            data['waiting_for_size_type'] = True
             return
             
         elif current_step == 2:
-            # Размеры
-            data['form_data']['size'] = text
-            data['current_step'] = 3
-            
-            send_message(
-                vk, 
-                user_id, 
-                f"✅ Размеры: {text}\n\n"
-                f"3/3. Когда нужна кухня?",
-                get_deadline_keyboard()
-            )
-            return
+            # Размеры (с новой логикой)
+            if waiting_for_size_type:
+                # Пользователь выбрал вариант из клавиатуры
+                if text == "📏 Я знаю точный размер":
+                    send_message(
+                        vk,
+                        user_id,
+                        f"📏 Укажите точные размеры кухни:\n\n"
+                        f"Например:\n"
+                        f"• 3х2.5м\n"
+                        f"• Длина 4м, ширина 2м\n"
+                        f"• 320х250см\n\n"
+                        f"Просто напишите в чат:",
+                        get_back_keyboard()
+                    )
+                    data['waiting_for_size_type'] = False
+                    return
+                    
+                elif text == "❓ Знаю только приблизительно":
+                    send_message(
+                        vk,
+                        user_id,
+                        f"❓ Укажите приблизительные размеры:\n\n"
+                        f"Например:\n"
+                        f"• Примерно 3 на 2.5 метра\n"
+                        f"• Небольшая кухня 6-7 кв.м\n"
+                        f"• Комната 4х3 метра\n\n"
+                        f"Опишите как можете:",
+                        get_back_keyboard()
+                    )
+                    data['waiting_for_size_type'] = False
+                    return
+                    
+                elif text == "❔ Еще не знаю размер":
+                    data['form_data']['size'] = "Размер неизвестен, нужен замер"
+                    data['current_step'] = 3
+                    data['waiting_for_size_type'] = False
+                    
+                    send_message(
+                        vk, 
+                        user_id, 
+                        f"✅ Размер: {data['form_data']['size']}\n\n"
+                        f"3/3. Когда нужна кухня?",
+                        get_deadline_keyboard()
+                    )
+                    return
+                    
+                else:
+                    # Пользователь ввел размеры напрямую
+                    data['form_data']['size'] = text
+                    data['current_step'] = 3
+                    data['waiting_for_size_type'] = False
+                    
+                    send_message(
+                        vk, 
+                        user_id, 
+                        f"✅ Размеры: {text}\n\n"
+                        f"3/3. Когда нужна кухня?",
+                        get_deadline_keyboard()
+                    )
+                    return
+            else:
+                # Пользователь ввел размеры после выбора типа
+                data['form_data']['size'] = text
+                data['current_step'] = 3
+                
+                send_message(
+                    vk, 
+                    user_id, 
+                    f"✅ Размеры: {text}\n\n"
+                    f"3/3. Когда нужна кухня?",
+                    get_deadline_keyboard()
+                )
+                return
             
         elif current_step == 3:
             # Сроки (последний вопрос перед телефоном)
@@ -603,26 +774,93 @@ def handle_message(vk, user_id, text):
                 vk, 
                 user_id, 
                 f"✅ Тип: {data['form_data']['type']}\n\n"
-                f"2/4. Какие размеры шкафа?\n"
-                f"Например: ширина 2м, высота 2.4м, глубина 60см\n"
-                f"Или укажите общие габариты помещения",
-                get_back_keyboard()
+                f"2/4. Какие размеры шкафа?\n\n"
+                f"Вы можете:\n"
+                f"• 📏 Указать точные размеры (ширина, высота, глубина)\n"
+                f"• ❓ Указать приблизительные размеры\n"
+                f"• ❔ Сказать что еще не знаете размер\n"
+                f"• ◀️ Вернуться назад\n\n"
+                f"Просто напишите размеры в чат или выберите вариант:",
+                get_size_keyboard()
             )
+            data['waiting_for_size_type'] = True
             return
             
         elif current_step == 2:
-            # Размеры шкафа
-            data['form_data']['size'] = text
-            data['current_step'] = 3
-            
-            send_message(
-                vk, 
-                user_id, 
-                f"✅ Размеры: {text}\n\n"
-                f"3/4. Есть ли у вас дизайн-проект?",
-                get_design_project_keyboard()
-            )
-            return
+            # Размеры шкафа (с новой логикой)
+            if waiting_for_size_type:
+                # Пользователь выбрал вариант из клавиатуры
+                if text == "📏 Я знаю точный размер":
+                    send_message(
+                        vk,
+                        user_id,
+                        f"📏 Укажите точные размеры шкафа:\n\n"
+                        f"Например:\n"
+                        f"• Ширина 2м, высота 2.4м, глубина 60см\n"
+                        f"• 200х240х60см\n"
+                        f"• 2м в ширину, 2.4м в высоту\n\n"
+                        f"Просто напишите в чат:",
+                        get_back_keyboard()
+                    )
+                    data['waiting_for_size_type'] = False
+                    return
+                    
+                elif text == "❓ Знаю только приблизительно":
+                    send_message(
+                        vk,
+                        user_id,
+                        f"❓ Укажите приблизительные размеры:\n\n"
+                        f"Например:\n"
+                        f"• Примерно 2 метра в ширину\n"
+                        f"• Высота до потолка, ширина 1.5-2м\n"
+                        f"• Небольшой шкаф 1.8х2.2м\n\n"
+                        f"Опишите как можете:",
+                        get_back_keyboard()
+                    )
+                    data['waiting_for_size_type'] = False
+                    return
+                    
+                elif text == "❔ Еще не знаю размер":
+                    data['form_data']['size'] = "Размер неизвестен, нужен замер"
+                    data['current_step'] = 3
+                    data['waiting_for_size_type'] = False
+                    
+                    send_message(
+                        vk, 
+                        user_id, 
+                        f"✅ Размер: {data['form_data']['size']}\n\n"
+                        f"3/4. Есть ли у вас дизайн-проект?",
+                        get_design_project_keyboard()
+                    )
+                    return
+                    
+                else:
+                    # Пользователь ввел размеры напрямую
+                    data['form_data']['size'] = text
+                    data['current_step'] = 3
+                    data['waiting_for_size_type'] = False
+                    
+                    send_message(
+                        vk, 
+                        user_id, 
+                        f"✅ Размеры: {text}\n\n"
+                        f"3/4. Есть ли у вас дизайн-проект?",
+                        get_design_project_keyboard()
+                    )
+                    return
+            else:
+                # Пользователь ввел размеры после выбора типа
+                data['form_data']['size'] = text
+                data['current_step'] = 3
+                
+                send_message(
+                    vk, 
+                    user_id, 
+                    f"✅ Размеры: {text}\n\n"
+                    f"3/4. Есть ли у вас дизайн-проект?",
+                    get_design_project_keyboard()
+                )
+                return
             
         elif current_step == 3:
             # Дизайн-проект
@@ -850,11 +1088,12 @@ def cancel_form(user_id):
             'form_data': {},
             'current_step': 0,
             'waiting_for_custom_type': False,
+            'waiting_for_size_type': False,  # Новое поле
             'last_action': None,
-            'last_activity': datetime.now().timestamp(),  # Время последней активности
-            'reminder_sent_1': False,  # Первое напоминание отправлено
-            'reminder_sent_2': False,  # Второе напоминание отправлено
-            'reminders_disabled': False  # Отключить напоминания для этого пользователя
+            'last_activity': datetime.now().timestamp(),
+            'reminder_sent_1': False,
+            'reminder_sent_2': False,
+            'reminders_disabled': False
         }
 
 def send_reminder_to_user(vk, user_id, reminder_number):
@@ -1012,6 +1251,4 @@ if __name__ == "__main__":
         print("\n🛑 Bot stopped by user")
     except Exception as e:
         logger.error(f"❌ Fatal error: {e}")
-
         sys.exit(1)
-
