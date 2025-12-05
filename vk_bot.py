@@ -17,7 +17,7 @@ from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 # Загрузка переменных окружения
 VK_TOKEN = os.getenv('VK_TOKEN')  # Добавьте значение по умолчанию
 GROUP_ID = os.getenv('GROUP_ID')  # Добавьте значение по умолчанию
-ADMIN_ID = int(os.getenv('ADMIN_ID'))  # Добавьте значение по умолчанию
+ADMIN_ID = int(os.getenv('ADMIN_ID')  # Добавьте значение по умолчанию
 
 COMPANY_INFO = {
     'experience': '4 года',
